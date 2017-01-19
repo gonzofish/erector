@@ -1,0 +1,22 @@
+{
+  "name": "erector-set",
+  "version": "0.0.0-alpha",
+  "description": "A tool for creating project generators",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gonzofish/erector-set.git"
+  },
+  "keywords": [
+    "generator"
+  ],
+  "author": "Matt Fehskens <matt.fehskens@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gonzofish/erector-set/issues"
+  },
+  "homepage": "https://github.com/gonzofish/erector-set#readme"
+}
