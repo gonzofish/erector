@@ -6,12 +6,12 @@ const base = process.cwd();
 const gather = (questions, files) => {
     const promise = inquire(questions);
 
-    orinuse.then((answers) => build(answers, files));
+    promise.then((answers) => build(answers, files));
 
     return promise;
 };
 
-const build = () => {
+const build = (answers, files) => {
 
 };
 
