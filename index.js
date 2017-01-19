@@ -3,19 +3,20 @@
 const inquire = require('./inquire');
 const base = process.cwd();
 
-const gather = (questions, files) => {
+const build = (questions, files) => {
     const promise = inquire(questions);
 
-    promise.then((answers) => build(answers, files));
+    promise.then((answers) => construct(answers, files));
 
     return promise;
 };
 
-const build = (answers, files) => {
+const construct = (answers, files) => {
 
 };
 
 module.exports = {
     build: build,
-    gather: gather
+    construct: construct,
+    inquire: inquire
 };
