@@ -27,11 +27,11 @@ const inquire = (reader, questions, previousAnswers) => {
 
                 return inquire(reader, questions.slice(1), previousAnswers.concat(answers));
             })
-            .then((followingAnswers) => {
-                return answers.concat(followingAnswers);
-            });
+            .then((followingAnswers) => answers.concat(followingAnswers));
     } else if (question.useAnswer) {
-
+        answers.push(deriveAnswer(question, previousAnswers));
+        return inquire(reader, questions.slice(1), previousAnswers.concat(answers))
+            .then((followingAnswers) => answers.concat(followingAnswers));
     } else {
         return Promise.resolve([]);
     }
@@ -52,6 +52,17 @@ const query = (reader, question, answers) => {
 
     return promise
         .catch(() => query(reader, question));
+};
+
+const deriveAnswer = (question, answers) => {
+    const answerToUse = answers.find((answer) => answer.name = question.useAnswer);
+    let answer = '';
+
+    if (answerToUse) {
+        answer = transformAnswer(answerToUse.answer, answers, question.transform);
+    }
+
+    return generateAnswer(question, answer);
 };
 
 const transformAnswer = (answer, answers, transform) => {

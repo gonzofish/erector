@@ -1,18 +1,14 @@
 'use strict';
 
+const construct = require('./construct');
 const inquire = require('./inquire');
-const base = process.cwd();
 
-const build = (questions, files) => {
+const build = (questions, templates, overwrite) => {
     const promise = inquire(questions);
 
-    promise.then((answers) => construct(answers, files));
+    promise.then((answers) => construct(answers, templates, !!overwrite));
 
     return promise;
-};
-
-const construct = (answers, files) => {
-
 };
 
 module.exports = {
