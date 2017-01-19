@@ -40,7 +40,7 @@ const askQuestion = (reader, questions, previousAnswers) => {
         .then((answer) => {
             answer = generateAnswer(question, answer);
 
-            return askNextQuestion(reader, questions, previousAnswer, answer);
+            return askNextQuestion(reader, questions, previousAnswers, answer);
             return inquire(reader, questions.slice(1), previousAnswers.concat(answer))
                 .then((followingAnswers) => [answer].concat(followingAnswers));
         });
@@ -66,7 +66,7 @@ const query = (reader, question, answers) => {
 const useAnswer = (reader, questions, previousAnswers) => {
     const answer = deriveAnswer(questions[0], previousAnswers);
 
-    return askNextQuestion(reader, questions, previousAnswer, answer);
+    return askNextQuestion(reader, questions, previousAnswers, answer);
 };
 
 const deriveAnswer = (question, answers) => {
@@ -90,7 +90,7 @@ const transformAnswer = (answer, answers, transform) => {
     return newAnswer;
 };
 
-const askNextQuestion = (reader, questions, previousAnswer, answer) =>
+const askNextQuestion = (reader, questions, previousAnswers, answer) =>
     inquire(reader, questions.slice(1), previousAnswers.concat(answer))
         .then((followingAnswers) => [answer].concat(followingAnswers));
 
