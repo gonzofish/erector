@@ -17,24 +17,33 @@ module.exports = (questions) => {
 };
 
 const inquire = (reader, questions, previousAnswers) => {
-    let answers = [];
     const question = questions[0] || {};
+    let promise;
 
     if (question.question) {
-        return query(reader, question, previousAnswers)
-            .then((answer) => {
-                answers.push(generateAnswer(question, answer));
-
-                return inquire(reader, questions.slice(1), previousAnswers.concat(answers));
-            })
-            .then((followingAnswers) => answers.concat(followingAnswers));
+        promise = askQuestion(reader, questions, previousAnswers);
     } else if (question.useAnswer) {
-        answers.push(deriveAnswer(question, previousAnswers));
-        return inquire(reader, questions.slice(1), previousAnswers.concat(answers))
-            .then((followingAnswers) => answers.concat(followingAnswers));
+        promise = useAnswer(reader, questions, previousAnswers);
     } else {
-        return Promise.resolve([]);
+        promise = Promise.resolve([]);
     }
+
+    return promise.then((followingAnswers) => {
+        return [].concat(followingAnswers)
+    });
+};
+
+const askQuestion = (reader, questions, previousAnswers) => {
+    const question = questions[0];
+
+    return query(reader, question, previousAnswers)
+        .then((answer) => {
+            answer = generateAnswer(question, answer);
+
+            return askNextQuestion(reader, questions, previousAnswer, answer);
+            return inquire(reader, questions.slice(1), previousAnswers.concat(answer))
+                .then((followingAnswers) => [answer].concat(followingAnswers));
+        });
 };
 
 const query = (reader, question, answers) => {
@@ -54,8 +63,14 @@ const query = (reader, question, answers) => {
         .catch(() => query(reader, question));
 };
 
+const useAnswer = (reader, questions, previousAnswers) => {
+    const answer = deriveAnswer(questions[0], previousAnswers);
+
+    return askNextQuestion(reader, questions, previousAnswer, answer);
+};
+
 const deriveAnswer = (question, answers) => {
-    const answerToUse = answers.find((answer) => answer.name = question.useAnswer);
+    const answerToUse = answers.find((answer) => answer.name === question.useAnswer);
     let answer = '';
 
     if (answerToUse) {
@@ -74,6 +89,10 @@ const transformAnswer = (answer, answers, transform) => {
 
     return newAnswer;
 };
+
+const askNextQuestion = (reader, questions, previousAnswer, answer) =>
+    inquire(reader, questions.slice(1), previousAnswers.concat(answer))
+        .then((followingAnswers) => [answer].concat(followingAnswers));
 
 const checkIsAnswerValid = (answer, allowBlank) => {
     switch (getValueType(answer)) {
