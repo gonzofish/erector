@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const utils = require('./utils');
 
 module.exports = (answers, templates, overwrite) => templates.forEach((template) => {
     const createFile = checkCreateFile(template, answers);
@@ -11,10 +12,17 @@ module.exports = (answers, templates, overwrite) => templates.forEach((template)
 
         ensureDirectories(destination);
 
-        if (!fs.existsSync(destination) || overwrite) {
+        if (!fs.existsSync(destination) || overwrite || template.overwrite) {
             const output = replace(template.template, answers, true);
 
             fs.writeFileSync(destination, output, { encoding: 'utf8' });
+        }
+        else if(template.update) {
+            const templateObj = JSON.parse(replace(template.template, answers, true));
+            const existing = JSON.parse(fs.readFileSync(destination, 'utf8'));
+
+            const updated = utils.mergeDeep(existing, templateObj);
+            fs.writeFileSync(destination, JSON.stringify(updated, null, 2));
         }
     }
 });

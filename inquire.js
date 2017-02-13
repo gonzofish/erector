@@ -1,6 +1,8 @@
 'use strict';
 
+const fs = require('fs');
 const readline = require('readline');
+const utils = require('./utils');
 
 module.exports = (questions) => {
     const reader = readline.createInterface({
@@ -8,7 +10,13 @@ module.exports = (questions) => {
         output: process.stdout
     });
 
-    return inquire(reader, questions, [])
+    let previousAnswers = [];
+    let answersPath = utils.getAnswersPath();
+    if (fs.existsSync(answersPath)) {
+        previousAnswers = JSON.parse(fs.readFileSync(answersPath, 'utf8'));
+    }
+
+    return inquire(reader, questions, previousAnswers)
         .then((answers) => {
             reader.close();
 
@@ -29,7 +37,10 @@ const inquire = (reader, questions, previousAnswers) => {
     }
 
     return promise.then((followingAnswers) => {
-        return [].concat(followingAnswers)
+        const answers = [].concat(followingAnswers)
+        fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers));
+        
+        return answers;
     });
 };
 
@@ -47,6 +58,7 @@ const askQuestion = (reader, questions, previousAnswers) => {
 };
 
 const query = (reader, question, answers) => {
+    const previousAnswer = findAnswer(question, answers);
     const promise = new Promise((resolve, reject) => {
         reader.question(question.question.trim() + ' ', (rawAnswer) => {
             const answer = transformAnswer(rawAnswer, answers, question.transform);
@@ -57,6 +69,9 @@ const query = (reader, question, answers) => {
                 reject();
             }
         });
+        if (previousAnswer) {
+            reader.write(previousAnswer.answer);
+        }
     });
 
     return promise
@@ -67,6 +82,15 @@ const useAnswer = (reader, questions, previousAnswers) => {
     const answer = deriveAnswer(questions[0], previousAnswers);
 
     return askNextQuestion(reader, questions, previousAnswers, answer);
+};
+
+const findAnswer = (question, answers) => {
+    if (answers === undefined) {
+        return undefined;
+    }
+    return answers.find((answer) => {
+        return answer.name === question.name
+    });
 };
 
 const deriveAnswer = (question, answers) => {
