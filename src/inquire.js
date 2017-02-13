@@ -20,6 +20,8 @@ module.exports = (questions) => {
         .then((answers) => {
             reader.close();
 
+            // fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers));
+
             return answers;
         });
 };
@@ -36,12 +38,7 @@ const inquire = (reader, questions, previousAnswers) => {
         promise = Promise.resolve([]);
     }
 
-    return promise.then((followingAnswers) => {
-        const answers = [].concat(followingAnswers)
-        fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers));
-        
-        return answers;
-    });
+    return promise.then((followingAnswers) => [].concat(followingAnswers));
 };
 
 const askQuestion = (reader, questions, previousAnswers) => {
@@ -52,13 +49,11 @@ const askQuestion = (reader, questions, previousAnswers) => {
             answer = generateAnswer(question, answer);
 
             return askNextQuestion(reader, questions, previousAnswers, answer);
-            return inquire(reader, questions.slice(1), previousAnswers.concat(answer))
-                .then((followingAnswers) => [answer].concat(followingAnswers));
         });
 };
 
 const query = (reader, question, answers) => {
-    const previousAnswer = findAnswer(question, answers);
+    const previousAnswer = findAnswer(answers, question.name);
     const promise = new Promise((resolve, reject) => {
         reader.question(question.question.trim() + ' ', (rawAnswer) => {
             const answer = transformAnswer(rawAnswer, answers, question.transform);
@@ -75,7 +70,7 @@ const query = (reader, question, answers) => {
     });
 
     return promise
-        .catch(() => query(reader, question));
+        .catch(() => query(reader, question, answers));
 };
 
 const useAnswer = (reader, questions, previousAnswers) => {
@@ -84,17 +79,8 @@ const useAnswer = (reader, questions, previousAnswers) => {
     return askNextQuestion(reader, questions, previousAnswers, answer);
 };
 
-const findAnswer = (question, answers) => {
-    if (answers === undefined) {
-        return undefined;
-    }
-    return answers.find((answer) => {
-        return answer.name === question.name
-    });
-};
-
 const deriveAnswer = (question, answers) => {
-    const answerToUse = answers.find((answer) => answer.name === question.useAnswer);
+    const answerToUse = findAnswer(answers, question.useAnswer);
     let answer = '';
 
     if (answerToUse) {
@@ -103,6 +89,9 @@ const deriveAnswer = (question, answers) => {
 
     return generateAnswer(question, answer);
 };
+
+const findAnswer = (answers, name) =>
+    answers.find((answer) => answer.name === name);
 
 const transformAnswer = (answer, answers, transform) => {
     let newAnswer = answer;
@@ -114,12 +103,13 @@ const transformAnswer = (answer, answers, transform) => {
     return newAnswer;
 };
 
-const askNextQuestion = (reader, questions, previousAnswers, answer) =>
-    inquire(reader, questions.slice(1), previousAnswers.concat(answer))
+const askNextQuestion = (reader, questions, previousAnswers, answer) => {
+    return inquire(reader, questions.slice(1), previousAnswers.concat(answer))
         .then((followingAnswers) => [answer].concat(followingAnswers));
+};
 
 const checkIsAnswerValid = (answer, allowBlank) => {
-    switch (getValueType(answer)) {
+    switch (utils.getType(answer)) {
         case 'string':
             return !!answer || allowBlank;
         case 'null':
@@ -129,11 +119,6 @@ const checkIsAnswerValid = (answer, allowBlank) => {
             return true;
     }
 };
-
-const getValueType = (value) =>
-    Object.prototype.toString.call(value)
-        .replace(/\[object |]/g, '')
-        .toLowerCase();
 
 const generateAnswer = (question, answer) => ({
     name: question.name,

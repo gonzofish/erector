@@ -2,6 +2,7 @@
 
 const construct = require('./construct');
 const inquire = require('./inquire');
+const updaters = require('./updaters');
 
 const build = (questions, templates, overwrite) => {
     const promise = inquire(questions);
@@ -16,5 +17,6 @@ const build = (questions, templates, overwrite) => {
 module.exports = {
     build: build,
     construct: construct,
-    inquire: inquire
+    inquire: inquire,
+    updaters: updaters
 };
