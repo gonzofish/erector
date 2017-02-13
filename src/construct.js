@@ -2,30 +2,31 @@
 
 const fs = require('fs');
 const path = require('path');
+const updaters = require('./updaters');
 const utils = require('./utils');
 
-module.exports = (answers, templates, overwrite) => templates.forEach((template) => {
+module.exports = (answers, templates) => templates.forEach((template) => {
     const createFile = checkCreateFile(template, answers);
 
     if (createFile) {
-        const destination = replace(template.destination, answers);
-
-        ensureDirectories(destination);
-
-        if (!fs.existsSync(destination) || overwrite || template.overwrite) {
-            const output = replace(template.template, answers, true);
-
-            fs.writeFileSync(destination, output, { encoding: 'utf8' });
-        }
-        else if(template.update) {
-            const templateObj = JSON.parse(replace(template.template, answers, true));
-            const existing = JSON.parse(fs.readFileSync(destination, 'utf8'));
-
-            const updated = utils.mergeDeep(existing, templateObj);
-            fs.writeFileSync(destination, JSON.stringify(updated, null, 2));
-        }
+        create(template, answers);
     }
 });
+
+const create = () => {
+    const destination = replace(template.destination, answers);
+    let output;
+
+    ensureDirectories(destination);
+
+    if (!fs.existsSync(destination) || template.overwrite) {
+        output = replace(template.template, answers, true);
+    } else if(template.update) {
+        output = update(template, answers);
+    }
+
+    fs.writeFileSync(destination, output, { encoding: 'utf8' });
+};
 
 const checkCreateFile = (template, answers) => {
     let create = true;
@@ -37,6 +38,32 @@ const checkCreateFile = (template, answers) => {
     return create;
 };
 
+const update = (template, answers) => {
+    const replacement = replace(template.template, answers, true);
+    const existing = fs.readFileSync(destination, 'utf8');
+    const updateMethod = getUpdateMethod(template);
+    let updated = existing;
+
+    if (updateMethod) {
+        updated = updateMethod(existing, replacement);
+    }
+
+    return updated;
+};
+
+const getUpdateMethod = (template) => {
+    const updateType = utils.getType(template.update);
+    let method;
+
+    if (updateType === 'function') {
+        method = template.update;
+    } else if (updateType === 'string' && updaters[updateType]) {
+        method = updaters[updateType];
+    }
+
+    return method;
+};
+
 const replace = (template, answers, checkIsFile) => {
     let output = '';
 
@@ -44,9 +71,9 @@ const replace = (template, answers, checkIsFile) => {
         template = getTemplate(template, checkIsFile);
         output = answers.reduce(replaceAnswer, template);
     }
+};
 
     return output;
-};
 
 const getTemplate = (template, checkIsFile) => {
     if (checkIsFile && fs.existsSync(template)) {
