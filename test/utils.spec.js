@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const test = require('tape');
 const sinon = require('sinon');
 
@@ -33,6 +34,24 @@ test('utils.checkIsType should return true if type is the same as the return val
     t.end();
 });
 
+test('utils.copyValue should return a copy of the original value', (t) => {
+    const numbers = [1, 2, 3];
+    const date = new Date();
+
+    t.plan(6);
+
+    t.same(utils.copyValue(numbers), numbers);
+    t.notEqual(utils.copyValue(numbers), numbers);
+
+    t.same(utils.copyValue({ a: numbers }), { a: numbers });
+    t.notEqual(utils.copyValue({ a: numbers }), { a: numbers });
+
+    t.same(utils.copyValue(date), date);
+    t.notEqual(utils.copyValue(date), date);
+
+    t.end();
+});
+
 test('utils.mergeDeep should return an object with the source overwriting the target', (t) => {
     const targetDate = new Date();
     const target = {
@@ -61,4 +80,17 @@ test('utils.mergeDeep should return an object with the source overwriting the ta
     });
 
     t.end();
+});
+
+test('utils.getAnswersPath should return process.cwd() + path.sep + ".erector"', (t) => {
+    const mockCwd = sinon.stub(process, 'cwd');
+    const sep = path.sep;
+
+    t.plan(1);
+
+    mockCwd.returns('/a/pizza/place');
+
+    t.equal(utils.getAnswersPath(), `/a/pizza/place${sep}.erector`);
+
+    mockCwd.restore();
 });
