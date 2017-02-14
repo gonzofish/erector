@@ -4,7 +4,7 @@
   "description": "A tool for creating project generators",
   "main": "index.js",
   "scripts": {
-    "cover": "tap test/{,*/}*.spec.js --cov --coverage-report=lcov",
+    "coverage": "tap test/{,*/}*.spec.js --cov --coverage-report=lcov",
     "test": "tap test/{,*/}*.spec.js",
     "watch": "nodemon -q -x \"npm test\""
   },
