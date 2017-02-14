@@ -13,32 +13,37 @@ module.exports = (answers, templates) => templates.forEach((template) => {
     }
 });
 
-const create = () => {
-    const destination = replace(template.destination, answers);
-    let output;
-
-    ensureDirectories(destination);
-
-    if (!fs.existsSync(destination) || template.overwrite) {
-        output = replace(template.template, answers, true);
-    } else if(template.update) {
-        output = update(template, answers);
-    }
-
-    fs.writeFileSync(destination, output, { encoding: 'utf8' });
-};
-
 const checkCreateFile = (template, answers) => {
     let create = true;
 
-    if (typeof template.check === 'function') {
+    if (utils.checkIsType(template.check, 'function')) {
         create = template.check(answers);
     }
 
     return create;
 };
 
-const update = (template, answers) => {
+const create = (template, answers) => {
+    const destination = replace(template.destination, answers);
+    let write = false;
+    let output;
+
+    ensureDirectories(destination);
+
+    if (!fs.existsSync(destination) || template.overwrite) {
+        output = replace(template.template, answers, true);
+        write = true;
+    } else if(template.update) {
+        output = update(template, answers, destination);
+        write = true;
+    }
+
+    if (write) {
+        fs.writeFileSync(destination, output, { encoding: 'utf8' });
+    }
+};
+
+const update = (template, answers, destination) => {
     const replacement = replace(template.template, answers, true);
     const existing = fs.readFileSync(destination, 'utf8');
     const updateMethod = getUpdateMethod(template);
@@ -52,31 +57,33 @@ const update = (template, answers) => {
 };
 
 const getUpdateMethod = (template) => {
-    const updateType = utils.getType(template.update);
+    const updateMethod = template.update;
+    const updateType = utils.getType(updateMethod);
     let method;
 
     if (updateType === 'function') {
-        method = template.update;
-    } else if (updateType === 'string' && utils.checkIsType(updaters[updateType], 'function')) {
-        method = updaters[updateType];
+        method = updateMethod;
+    } else if (updateType === 'string' && utils.checkIsType(updaters[updateMethod], 'function')) {
+        method = updaters[updateMethod];
     }
 
     return method;
 };
 
-const replace = (template, answers, checkIsFile) => {
+const replace = (template, answers, isFile) => {
     let output = '';
 
     if (template && typeof template === 'string') {
-        template = getTemplate(template, checkIsFile);
+        template = getTemplate(template, !!isFile);
         output = answers.reduce(replaceAnswer, template);
     }
-};
 
     return output;
+};
 
-const getTemplate = (template, checkIsFile) => {
-    if (checkIsFile && fs.existsSync(template)) {
+
+const getTemplate = (template, isFile) => {
+    if (isFile && fs.existsSync(template)) {
         template = fs.readFileSync(template, 'utf8');
     }
 
