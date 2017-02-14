@@ -1,58 +1,58 @@
 'use strict';
 
 const path = require('path');
-const test = require('tape');
+const tap = require('tap');
 const sinon = require('sinon');
 
 const utils = require('../src/utils');
 
-test('utils.getType should return a lower-case string for the value type', (t) => {
-    t.plan(7);
+tap.test('utils.getType should return a lower-case string for the value type', (test) => {
+    test.plan(7);
 
-    t.equal(utils.getType('123'), 'string');
-    t.equal(utils.getType(123), 'number');
-    t.equal(utils.getType(false), 'boolean');
-    t.equal(utils.getType(() => {}), 'function');
-    t.equal(utils.getType([]), 'array');
-    t.equal(utils.getType({}), 'object');
-    t.equal(utils.getType(new Date()), 'date');
+    test.equal(utils.getType('123'), 'string');
+    test.equal(utils.getType(123), 'number');
+    test.equal(utils.getType(false), 'boolean');
+    test.equal(utils.getType(() => {}), 'function');
+    test.equal(utils.getType([]), 'array');
+    test.equal(utils.getType({}), 'object');
+    test.equal(utils.getType(new Date()), 'date');
 
-    t.end();
+    test.end();
 });
 
-test('utils.checkIsType should return true if type is the same as the return value from getType', (t) => {
-    t.plan(7);
+tap.test('utils.checkIsType should return true if type is the same as the return value from getType', (test) => {
+    test.plan(7);
 
-    t.ok(utils.checkIsType('123', 'string'));
-    t.ok(utils.checkIsType(123, 'number'));
-    t.ok(utils.checkIsType(false, 'boolean'));
-    t.ok(utils.checkIsType(() =>{}, 'function'));
-    t.ok(utils.checkIsType([], 'array'));
-    t.ok(utils.checkIsType({}, 'object'));
-    t.ok(utils.checkIsType(new Date(), 'date'));
+    test.ok(utils.checkIsType('123', 'string'));
+    test.ok(utils.checkIsType(123, 'number'));
+    test.ok(utils.checkIsType(false, 'boolean'));
+    test.ok(utils.checkIsType(() =>{}, 'function'));
+    test.ok(utils.checkIsType([], 'array'));
+    test.ok(utils.checkIsType({}, 'object'));
+    test.ok(utils.checkIsType(new Date(), 'date'));
 
-    t.end();
+    test.end();
 });
 
-test('utils.copyValue should return a copy of the original value', (t) => {
+tap.test('utils.copyValue should return a copy of the original value', (test) => {
     const numbers = [1, 2, 3];
     const date = new Date();
 
-    t.plan(6);
+    test.plan(6);
 
-    t.same(utils.copyValue(numbers), numbers);
-    t.notEqual(utils.copyValue(numbers), numbers);
+    test.same(utils.copyValue(numbers), numbers);
+    test.notEqual(utils.copyValue(numbers), numbers);
 
-    t.same(utils.copyValue({ a: numbers }), { a: numbers });
-    t.notEqual(utils.copyValue({ a: numbers }), { a: numbers });
+    test.same(utils.copyValue({ a: numbers }), { a: numbers });
+    test.notEqual(utils.copyValue({ a: numbers }), { a: numbers });
 
-    t.same(utils.copyValue(date), date);
-    t.notEqual(utils.copyValue(date), date);
+    test.same(utils.copyValue(date), date);
+    test.notEqual(utils.copyValue(date), date);
 
-    t.end();
+    test.end();
 });
 
-test('utils.mergeDeep should return an object with the source overwriting the target', (t) => {
+tap.test('utils.mergeDeep should return an object with the source overwriting the target', (test) => {
     const targetDate = new Date();
     const target = {
         a: [1, 2, 3],
@@ -70,7 +70,9 @@ test('utils.mergeDeep should return an object with the source overwriting the ta
         }
     };
 
-    t.deepEqual(utils.mergeDeep(target, source), {
+    test.plan(1);
+
+    test.deepEqual(utils.mergeDeep(target, source), {
         a: [1, 2, 3, 5, 4],
         b: true,
         c: {
@@ -79,18 +81,18 @@ test('utils.mergeDeep should return an object with the source overwriting the ta
         }
     });
 
-    t.end();
+    test.end();
 });
 
-test('utils.getAnswersPath should return process.cwd() + path.sep + ".erector"', (t) => {
+tap.test('utils.getAnswersPath should return process.cwd() + path.sep + ".erector"', (test) => {
     const mockCwd = sinon.stub(process, 'cwd');
     const sep = path.sep;
 
-    t.plan(1);
+    test.plan(1);
 
     mockCwd.returns('/a/pizza/place');
 
-    t.equal(utils.getAnswersPath(), `/a/pizza/place${sep}.erector`);
+    test.equal(utils.getAnswersPath(), `/a/pizza/place${sep}.erector`);
 
     mockCwd.restore();
 });

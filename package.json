@@ -4,7 +4,9 @@
   "description": "A tool for creating project generators",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/{,*/}*.spec.js | tap-spec"
+    "cover": "tap test/{,*/}*.spec.js --cov --coverage-report=lcov",
+    "test": "tap test/{,*/}*.spec.js",
+    "watch": "nodemon -q -x \"npm test\""
   },
   "repository": {
     "type": "git",
@@ -21,7 +23,6 @@
   "homepage": "https://github.com/gonzofish/erector-set#readme",
   "devDependencies": {
     "sinon": "^1.17.7",
-    "tap-spec": "^4.1.1",
-    "tape": "^4.6.3"
+    "tap": "^10.1.0"
   }
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-const test = require('tape');
+const tap = require('tap');
 const sinon = require('sinon');
 
 const utils = require('../../src/utils');
@@ -24,66 +24,69 @@ let mockMerge;
 let mockParse;
 let mockStringify;
 
-test('Updaters: JSON [setup]', (t) => {
-    mockMerge = sinon.stub(utils, 'mergeDeep');
-    mockParse = sinon.stub(JSON, 'parse');
-    mockStringify = sinon.stub(JSON, 'stringify');
 
-    mockParse.returns('parseReturn');
-    mockMerge.returns('mergeReturn');
-    mockStringify.returns('stringifyReturn');
+tap.test('Updaters: JSON [tests]', (suite) => {
+    suite.beforeEach((done) => {
+        mockMerge = sinon.stub(utils, 'mergeDeep');
+        mockParse = sinon.stub(JSON, 'parse');
+        mockStringify = sinon.stub(JSON, 'stringify');
 
-    t.end();
-});
+        mockParse.returns('parseReturn');
+        mockMerge.returns('mergeReturn');
+        mockStringify.returns('stringifyReturn');
 
-test('Updaters: JSON [tests]', (group) => {
-    group.test('should call JSON.parse on existing & replacement', (t) => {
-        t.plan(2);
+        done();
+    });
+
+    suite.afterEach((done) => {
+        mockMerge.restore();
+        mockParse.restore();
+        mockStringify.restore();
+
+        done();
+    });
+
+    suite.test('should call JSON.parse on existing & replacement', (test) => {
+        test.plan(2);
 
         jsonUpdater(existFile, replaceFile);
 
-        t.equal(mockParse.firstCall.args[0], existFile);
-        t.equal(mockParse.secondCall.args[0], replaceFile);
+        test.equal(mockParse.firstCall.args[0], existFile);
+        test.equal(mockParse.secondCall.args[0], replaceFile);
 
-        t.end();
+        test.end();
     });
 
-    group.test('should call utils.mergeDeep with JSON.parsed existing & replacement', (t) => {
-        t.plan(1);
+    suite.test('should call utils.mergeDeep with JSON.parsed existing & replacement', (test) => {
+        test.plan(1);
 
         jsonUpdater(existFile, replaceFile);
 
-        t.deepLooseEqual(mockMerge.firstCall.args, ['parseReturn', 'parseReturn']);
+        test.deepEqual(mockMerge.firstCall.args, ['parseReturn', 'parseReturn']);
 
-        t.end();
+        test.end();
     });
 
-    group.test('should call JSON.stringify with the returned value from utils.mergeDeep', (t) => {
-        t.plan(1);
+    suite.test('should call JSON.stringify with the returned value from utils.mergeDeep', (test) => {
+        test.plan(1);
 
         jsonUpdater(existFile, replaceFile);
 
-        t.deepLooseEqual(mockStringify.firstCall.args, ['mergeReturn', null, 2]);
+        test.deepEqual(mockStringify.firstCall.args, ['mergeReturn', null, 2]);
+
+        test.end();
     });
 
-    group.test('should return the result of JSON.stringify', (t) => {
-        t.plan(1);
+    suite.test('should return the result of JSON.stringify', (test) => {
+        test.plan(1);
 
         const result = jsonUpdater(existFile, replaceFile);
 
-        t.equal(result, 'stringifyReturn');
+        test.equal(result, 'stringifyReturn');
 
-        t.end();
+        test.end();
     });
 
-    group.end();
+    suite.end();
 });
 
-// Tear down
-test('Updaters: JSON [tear-down]', (t) => {
-    mockMerge.restore();
-    mockParse.restore();
-    mockStringify.restore();
-
-    t.end();
-});
