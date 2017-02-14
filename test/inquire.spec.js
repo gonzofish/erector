@@ -41,6 +41,10 @@ tap.test('.inquire', (suite) => {
         mockFsReadFile.restore();
         mockFsWriteFile.restore();
 
+        mockReadline.close.reset();
+        mockReadline.question.reset();
+        mockReadline.write.reset();
+
         done();
     });
 
@@ -139,7 +143,6 @@ tap.test('.inquire', (suite) => {
         ];
 
         test.plan(2);
-        mockReadline.question.reset();
 
         const promise = inquire(questions);
         mockReadline.question.lastCall.args[1]('Y');
@@ -158,7 +161,6 @@ tap.test('.inquire', (suite) => {
         ];
 
         test.plan(2);
-        mockReadline.question.reset();
 
         inquire(questions);
         mockReadline.question.lastCall.args[1]();
@@ -170,13 +172,46 @@ tap.test('.inquire', (suite) => {
         });
     });
 
-    suite.test('should resolve the question Promise if the answer is valid', (test) => {
+    suite.test('should ask the question again if the answer is null', (test) => {
+        const questions = [
+            { question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(2);
+
+        inquire(questions);
+        mockReadline.question.lastCall.args[1](null);
+
+        setTimeout(() => {
+            test.ok(mockReadline.question.calledTwice);
+            test.equal(mockReadline.question.lastCall.args[0], 'Do you like food? ');
+            test.end();
+        });
+    });
+
+    suite.test('should ask the question again if the answer is undefined', (test) => {
+        const questions = [
+            { question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(2);
+
+        inquire(questions);
+        mockReadline.question.lastCall.args[1](undefined);
+
+        setTimeout(() => {
+            test.ok(mockReadline.question.calledTwice);
+            test.equal(mockReadline.question.lastCall.args[0], 'Do you like food? ');
+            test.end();
+        });
+    });
+
+    suite.test('should resolve the question Promise if the answer is a valid string', (test) => {
         const questions = [
             { question: 'Do you like food?', name: 'food' }
         ];
 
         test.plan(1);
-        mockReadline.question.reset();
 
         const promise = inquire(questions);
 
@@ -190,6 +225,44 @@ tap.test('.inquire', (suite) => {
         });
     });
 
+    suite.test('should resolve the question Promise if the answer is a non-null, non-undefined, non-string', (test) => {
+        const questions = [
+            { question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(1);
+
+        const promise = inquire(questions);
+
+        mockReadline.question.lastCall.args[1](12);
+
+        promise.then((answers) => {
+            test.same(answers, [
+                { answer: 12, name: 'food' }
+            ]);
+            test.end();
+        });
+    });
+
+    suite.test('should resolve the question Promise if a blank answer is valid', (test) => {
+        const questions = [
+            { allowBlank: true, question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(1);
+
+        const promise = inquire(questions);
+
+        mockReadline.question.lastCall.args[1]('');
+
+        promise.then((answers) => {
+            test.same(answers, [
+                { answer: '', name: 'food' }
+            ]);
+            test.end();
+        });
+    });
+
     suite.test('should use an answer to answer another question if the useAnswer attribute is set', (test) => {
         const questions = [
             { question: 'What is you favorite food?', name: 'fav' },
@@ -197,7 +270,6 @@ tap.test('.inquire', (suite) => {
         ];
 
         test.plan(1);
-        mockReadline.question.reset();
 
         const promise = inquire(questions);
 
@@ -219,7 +291,6 @@ tap.test('.inquire', (suite) => {
         ];
 
         test.plan(1);
-        mockReadline.question.reset();
 
         const promise = inquire(questions);
 
@@ -241,7 +312,6 @@ tap.test('.inquire', (suite) => {
         ];
 
         test.plan(1);
-        mockReadline.question.reset();
 
         const promise = inquire(questions);
 
@@ -254,6 +324,32 @@ tap.test('.inquire', (suite) => {
             ]);
             test.end();
         });
+    });
+
+    suite.test('should write the .erector file on a successful inquiry', (test) => {
+        const questions = [
+            { question: 'What is you favorite food?', name: 'fav' }
+        ];
+        const mockStringify = sinon.stub(JSON, 'stringify');
+
+        mockStringify.returns('tata toothy');
+
+        test.plan(1);
+
+        const promise = inquire(questions);
+
+        mockReadline.question.firstCall.args[1]('pizza');
+
+        promise.then(() => {
+            test.same(mockFsWriteFile.lastCall.args, [
+                'baba booey',
+                'tata toothy',
+                { encoding: 'utf8' }
+            ]);
+            mockStringify.restore();
+            test.end();
+        });
+
     });
 
     suite.done();

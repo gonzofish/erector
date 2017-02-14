@@ -52,6 +52,12 @@ tap.test('utils.copyValue should return a copy of the original value', (test) =>
     test.end();
 });
 
+tap.test('utils.mergeDeep should return a non-array, non-object', (test) => {
+    test.plan(1);
+    test.equal(utils.mergeDeep(12, 13), 13);
+    test.end();
+});
+
 tap.test('utils.mergeDeep should return an object with the source overwriting the target', (test) => {
     const targetDate = new Date();
     const target = {

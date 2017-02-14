@@ -57,7 +57,7 @@ const getUpdateMethod = (template) => {
 
     if (updateType === 'function') {
         method = template.update;
-    } else if (updateType === 'string' && updaters[updateType]) {
+    } else if (updateType === 'string' && utils.checkIsType(updaters[updateType], 'function')) {
         method = updaters[updateType];
     }
 

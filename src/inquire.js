@@ -20,7 +20,7 @@ module.exports = (questions) => {
         .then((answers) => {
             reader.close();
 
-            // fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers));
+            fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers), { encoding: 'utf8' });
 
             return answers;
         });
