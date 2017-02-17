@@ -6,7 +6,7 @@
   "scripts": {
     "coverage": "tap test/{,*/}*.spec.js --cov --coverage-report=lcov",
     "test": "tap test/{,*/}*.spec.js",
-    "watch": "nodemon -q -x \"npm test\"",
+    "watch": "nodemon -q -x \"npm test\""
   },
   "repository": {
     "type": "git",
