@@ -3,7 +3,7 @@
 const handleYesNo = (value) => {
     const isString = typeof value === 'string';
 
-    if (isString && value.match(/^(y(es)?|no?)$/)) {
+    if (isString && value.match(/^(y(es)?|no?|Alright\!)$/)) {
         value = getYesNoValue(value);
     } else {
         value = null;
@@ -13,7 +13,8 @@ const handleYesNo = (value) => {
 };
 
 const getYesNoValue = (value) => {
-    const lookup = { n: false, y: true };
+    // a would only be from Alright!
+    const lookup = { a: true, n: false, y: true };
 
     value = value[0].toLowerCase();
 

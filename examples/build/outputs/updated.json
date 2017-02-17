@@ -1,0 +1,10 @@
+{
+  "beta": true,
+  "gamma": "happy",
+  "delta": {
+    "epsilon": false,
+    "zeta": 42,
+    "taco": "banana"
+  },
+  "alpha": 12345
+}

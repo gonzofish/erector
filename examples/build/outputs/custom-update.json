@@ -1,0 +1,20 @@
+{
+    "foods": [
+        "pizza",
+        "burger",
+        "taco"
+    ],
+    "delicious": true,
+    "shops": {
+        "burger": [
+            "McDonald's",
+            "In-N-Out"
+        ],
+        "pizza": [
+            "Inzillo's"
+        ],
+        "taco": [
+            "Surf Taco"
+        ]
+    }
+}

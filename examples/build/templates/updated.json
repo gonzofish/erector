@@ -1,0 +1,9 @@
+{
+    "alpha": 12345,
+    "beta": true,
+    "gamma": "happy",
+    "delta": {
+        "epsilon": false,
+        "zeta": 42
+    }
+}
