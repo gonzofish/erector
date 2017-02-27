@@ -4,7 +4,7 @@ const fs = require('fs');
 const readline = require('readline');
 const utils = require('./utils');
 
-module.exports = (questions) => {
+module.exports = (questions, saveAnswers) => {
     const reader = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -16,11 +16,13 @@ module.exports = (questions) => {
         previousAnswers = JSON.parse(fs.readFileSync(answersPath, 'utf8'));
     }
 
-    return inquire(reader, questions, previousAnswers)
+    return inquire(reader, questions, previousAnswers, saveAnswers)
         .then((answers) => {
             reader.close();
 
-            fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers), { encoding: 'utf8' });
+            if (saveAnswers) {
+                fs.writeFileSync(utils.getAnswersPath(), JSON.stringify(answers), { encoding: 'utf8' });
+            }
 
             return answers;
         });
