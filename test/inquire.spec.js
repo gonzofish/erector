@@ -336,7 +336,7 @@ tap.test('.inquire', (suite) => {
 
         test.plan(1);
 
-        const promise = inquire(questions);
+        const promise = inquire(questions, true);
 
         mockReadline.question.firstCall.args[1]('pizza');
 
@@ -347,6 +347,23 @@ tap.test('.inquire', (suite) => {
                 { encoding: 'utf8' }
             ]);
             mockStringify.restore();
+            test.end();
+        });
+
+    });
+
+    suite.test('should not write to the .erector file', (test) => {
+        const questions = [
+            { question: 'What is you favorite food?', name: 'fav' }
+        ];
+        test.plan(1);
+
+        const promise = inquire(questions);
+
+        mockReadline.question.firstCall.args[1]('pizza');
+
+        promise.then(() => {
+            test.ok(mockFsWriteFile.notCalled);
             test.end();
         });
 
