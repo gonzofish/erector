@@ -4,7 +4,7 @@ const fs = require('fs');
 const readline = require('readline');
 const utils = require('./utils');
 
-module.exports = (questions, saveAnswers) => {
+module.exports = (questions, saveAnswers, previousAnswerTransforms) => {
     const reader = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -14,6 +14,10 @@ module.exports = (questions, saveAnswers) => {
     let answersPath = utils.getAnswersPath();
     if (fs.existsSync(answersPath)) {
         previousAnswers = JSON.parse(fs.readFileSync(answersPath, 'utf8'));
+        previousAnswers = transformPreviousAnswers(
+            previousAnswers,
+            previousAnswerTransforms || {}
+        );
     }
 
     return inquire(reader, questions, previousAnswers, saveAnswers)
@@ -27,6 +31,17 @@ module.exports = (questions, saveAnswers) => {
             return answers;
         });
 };
+
+const transformPreviousAnswers = (answers, transforms) =>
+    answers.map((answer) => {
+        const transform = transforms[answer.name];
+
+        if (utils.checkIsType(transform, 'function')) {
+            answer.answer = transform(answer.answer);
+        }
+
+        return answer;
+    });
 
 const inquire = (reader, questions, previousAnswers) => {
     const question = questions[0] || {};
@@ -67,7 +82,7 @@ const query = (reader, question, answers) => {
             }
         });
         if (previousAnswer) {
-            reader.write(previousAnswer.answer);
+            reader.write('' + previousAnswer.answer);
         }
     });
 

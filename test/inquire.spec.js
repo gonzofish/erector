@@ -80,6 +80,7 @@ tap.test('.inquire', (suite) => {
 
         mockFsExists.returns(true);
         mockFsReadFile.returns('fafa flo fly');
+        mockParse.returns([]);
 
         inquire([]);
 
@@ -130,6 +131,33 @@ tap.test('.inquire', (suite) => {
         inquire(questions);
 
         test.equal(mockReadline.write.lastCall.args[0], 'N');
+        test.end();
+
+        mockFsExists.returns(false);
+        mockParse.restore();
+    });
+
+    suite.test('should call a transform for a previous answer if it is provided', (test) => {
+        const questions = [
+            { question: 'Do you like food?', name: 'food' }
+        ];
+        const mockParse = sinon.stub(JSON, 'parse');
+        const transforms = {
+            food: sinon.mock().returns('Y')
+        };
+
+        test.plan(3);
+
+        mockFsExists.returns(true);
+        mockParse.returns([
+            { answer: true, name: 'food' }
+        ]);
+
+        inquire(questions, false, transforms);
+
+        test.ok(transforms.food.calledOnce);
+        test.ok(transforms.food.calledWith(true));
+        test.equal(mockReadline.write.lastCall.args[0], 'Y');
         test.end();
 
         mockFsExists.returns(false);
