@@ -71,6 +71,7 @@ The questions to ask a user should be provided as an **Array** of **Objects** wi
 structure:
 
 - `allowBlank`: if truthy, will allow blank answers
+- `defaultAnswer`: provide a default value to use; if provided, `allowBlank` is `true`
 - `name` (_required_): an ID, unique to the set of questions
 - `question`: the **String** prompt to show the user
 - `transform`: a **Function** to transform the user's input; method signature is

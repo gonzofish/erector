@@ -49,15 +49,15 @@ tap.test('.inquire', (suite) => {
     });
 
     suite.test('should create a new readline interface', (test) => {
-        test.plan(1);
+        test.plan(3);
 
         inquire([]);
 
         // same == equivalent
-        test.same(mockCreateInterface.firstCall.args[0], {
-            input: process.stdin,
-            output: process.stdout
-        });
+        const config = mockCreateInterface.firstCall.args[0];
+        test.equal(typeof config.completer, 'function');
+        test.equal(config.input, process.stdin);
+        test.equal(config.output, process.stdout);
 
         test.end();
     });
@@ -135,6 +135,34 @@ tap.test('.inquire', (suite) => {
 
         mockFsExists.returns(false);
         mockParse.restore();
+    });
+
+    suite.test('should use a defaultAnswer if provided', (test) => {
+        const questions = [
+            { defaultAnswer: 'Darn tootin!', question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(1);
+
+        inquire(questions);
+
+        test.equal(mockReadline.question.lastCall.args[0], 'Do you like food (Darn tootin!)? ');
+        test.end();
+    });
+
+    suite.test('should use call a defaultAnswer function if provided', (test) => {
+        const defaultSub = sinon.stub({ stubby() {} }, 'stubby', () => 'Functional...');
+        const questions = [
+            { defaultAnswer: defaultSub, question: 'Do you like food?', name: 'food' }
+        ];
+
+        test.plan(2);
+
+        inquire(questions);
+
+        test.deepEqual(defaultSub.lastCall.args[0], []);
+        test.equal(mockReadline.question.lastCall.args[0], 'Do you like food (Functional...)? ');
+        test.end();
     });
 
     suite.test('should call a transform for a previous answer if it is provided', (test) => {

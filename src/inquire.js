@@ -4,8 +4,12 @@ const fs = require('fs');
 const readline = require('readline');
 const utils = require('./utils');
 
+const baseCompleter = (line) => [[''], line];
+let completer = baseCompleter;
+
 module.exports = (questions, saveAnswers, previousAnswerTransforms) => {
     const reader = readline.createInterface({
+        completer: (line) => completer(line),
         input: process.stdin,
         output: process.stdout
     });
@@ -70,24 +74,68 @@ const askQuestion = (reader, questions, previousAnswers) => {
 };
 
 const query = (reader, question, answers) => {
-    const previousAnswer = findAnswer(answers, question.name);
-    const promise = new Promise((resolve, reject) => {
-        reader.question(question.question.trim() + ' ', (rawAnswer) => {
-            const answer = transformAnswer(rawAnswer, answers, question.transform);
+    const previousAnswer = findAnswer(answers, question);
+    const defaultAnswer = getDefaultAnswer(question, answers);
 
-            if (checkIsAnswerValid(answer, question.allowBlank)) {
-                resolve(answer);
+    const promise = new Promise((resolve, reject) => {
+        completer = baseCompleter;
+
+        if (defaultAnswer) {
+            completer = (line) => {
+                const complete = defaultAnswer.startsWith(line) || !line;
+                return [[complete ? defaultAnswer : ''], line];
+            };
+        };
+
+        reader.question(augmentQuestion(question.question, defaultAnswer), (rawAnswer) => {
+            const answer = transformAnswer(rawAnswer, answers, question);
+
+            if (checkIsAnswerValid(answer, question)) {
+                resolve(answer || defaultAnswer);
             } else {
                 reject();
             }
         });
-        if (previousAnswer) {
-            reader.write('' + previousAnswer.answer);
+        if (previousAnswer !== undefined) {
+            reader.write('' + previousAnswer);
         }
     });
 
     return promise
         .catch(() => query(reader, question, answers));
+};
+
+const augmentQuestion = (question, defaultAnswer) => {
+    let text = question.trim();
+    const validPunctuation = [':', '.', '?', '!'];
+    const punctuationIndex = validPunctuation.indexOf(text[text.length - 1]);
+    let punctuation;
+
+    if (punctuationIndex !== -1) {
+        text = text.slice(0, text.length - 1);
+        punctuation = validPunctuation[punctuationIndex];
+    }
+
+    if (defaultAnswer) {
+        text = text + ` (${ defaultAnswer })`;
+    }
+
+    if (punctuation) {
+        text = text + punctuation;
+    }
+
+    return text + ' ';
+};
+
+const getDefaultAnswer = (question, answers) => {
+    let answer = '';
+
+    if ('defaultAnswer' in question) {
+        answer = utils.checkIsType(question.defaultAnswer, 'function') ?
+            question.defaultAnswer(answers) : question.defaultAnswer;
+    }
+
+    return answer;
 };
 
 const useAnswer = (reader, questions, previousAnswers) => {
@@ -97,24 +145,34 @@ const useAnswer = (reader, questions, previousAnswers) => {
 };
 
 const deriveAnswer = (question, answers) => {
-    const answerToUse = findAnswer(answers, question.useAnswer);
+    const answerToUse = findAnswer(answers, { name: question.useAnswer });
     let answer = '';
 
     if (answerToUse) {
-        answer = transformAnswer(answerToUse.answer, answers, question.transform);
+        answer = transformAnswer(answerToUse, answers, question);
     }
 
     return generateAnswer(question, answer);
 };
 
-const findAnswer = (answers, name) =>
-    answers.find((answer) => answer.name === name);
+const findAnswer = (answers, question) => {
+    let answer = answers.find((answer) => answer.name === question.name);
 
-const transformAnswer = (answer, answers, transform) => {
+    if (answer !== undefined && 'answer' in answer) {
+        answer = answer.answer;
+    }
+
+    return answer;
+};
+
+const transformAnswer = (answer, answers, question) => {
+    const transform = question.transform;
     let newAnswer = answer;
 
     if (typeof transform === 'function') {
         newAnswer = transform(answer, answers);
+    } else if (question.defaultAnswer) {
+        newAnswer = '';
     }
 
     return newAnswer;
@@ -125,10 +183,10 @@ const askNextQuestion = (reader, questions, previousAnswers, answer) => {
         .then((followingAnswers) => [answer].concat(followingAnswers));
 };
 
-const checkIsAnswerValid = (answer, allowBlank) => {
+const checkIsAnswerValid = (answer, question) => {
     switch (utils.getType(answer)) {
         case 'string':
-            return !!answer || allowBlank;
+            return !!answer || question.allowBlank || question.defaultAnswer;
         case 'null':
         case 'undefined':
             return false;
