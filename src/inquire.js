@@ -139,18 +139,18 @@ const getDefaultAnswer = (question, answers) => {
 };
 
 const useAnswer = (reader, questions, previousAnswers) => {
-    const answer = deriveAnswer(questions[0], previousAnswers);
+    let answer = deriveAnswer(questions[0], previousAnswers);
+
+    if (answer && answer.answer === undefined) {
+        answer.answer = '';
+    }
 
     return askNextQuestion(reader, questions, previousAnswers, answer);
 };
 
 const deriveAnswer = (question, answers) => {
     const answerToUse = findAnswer(answers, { name: question.useAnswer });
-    let answer = '';
-
-    if (answerToUse) {
-        answer = transformAnswer(answerToUse, answers, question);
-    }
+    const answer = transformAnswer(answerToUse, answers, question);
 
     return generateAnswer(question, answer);
 };
