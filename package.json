@@ -1,6 +1,6 @@
 {
   "name": "erector-set",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-beta.1",
   "description": "A tool for creating project generators",
   "main": "index.js",
   "scripts": {
