@@ -4,9 +4,12 @@
   "description": "A tool for creating project generators",
   "main": "index.js",
   "scripts": {
-    "coverage": "tap test/{,*/}*.spec.js --cov --coverage-report=lcov",
-    "test": "tap test/{,*/}*.spec.js",
-    "watch": "nodemon -q -x \"npm test\""
+    "coverage": "tap \"test/**/*.spec.js\" --cov --coverage-report=lcov",
+    "local": "tap \"test/**/*.spec.js\" --coverage --coverage-report=text",
+    "start": "node .",
+    "test": "tap \"test/**/*.spec.js\" --coverage",
+    "posttest": "tap --coverage-report=lcov && codecov",
+    "watch": "nodemon -q -x \"npm run local\""
   },
   "repository": {
     "type": "git",
@@ -22,6 +25,7 @@
   },
   "homepage": "https://github.com/gonzofish/erector-set#readme",
   "devDependencies": {
+    "nodemon": "^1.11.0",
     "sinon": "^1.17.7",
     "tap": "^10.1.0"
   }

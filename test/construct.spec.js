@@ -1,23 +1,3 @@
-/*
-    NEEDED STUBS:
-
-    fs.existsSync
-    fs.mkdirSync
-    fs.readFileSync
-    fs.writeFileSync
-
-    path.resolve?
-
-    updaters.json?
-    utils.checkIsType
-    utils.getType
-*/
-
-/*
-    1. Check if we should create file
-    2. Perform replacement on template.destination
-    3. Perform replacement on template.template
-*/
 'use strict';
 
 const fs = require('fs');
@@ -301,6 +281,33 @@ tap.test('.construct', (suite) => {
         test.ok(mockExists.calledWith('/this/location/test.txt'));
         test.ok(mockReplace.withArgs(nameRegex, 'pizza').calledOnce);
         test.ok(mockWrite.notCalled);
+
+        test.end();
+    });
+
+    suite.test('should provide a test mode', (test) => {
+        const nameRegex = new RegExp('\\{\\{\\s*name\\s*\\}\\}', 'g');
+
+        mockExists.withArgs('/this/location/test.txt').returns(false);
+        mockExists.withArgs('my/template.txt').returns(true);
+        mockRead.withArgs('my/template.txt', 'utf8').returns('this is the template, {{ name }}!');
+        test.plan(2);
+
+        construct.setTestMode(true);
+
+        const result = construct([
+            { answer: 'pizza', name: 'name' }
+        ], [
+            { destination: `/this/location/test.txt`, template: 'my/template.txt' }
+        ]);
+
+        test.notOk(mockWrite.called);
+        test.deepEqual(result, [
+            {
+                destination: '/this/location/test.txt',
+                output: 'this is the template, pizza!'
+            }
+        ]);
 
         test.end();
     });

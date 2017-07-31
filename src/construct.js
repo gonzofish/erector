@@ -5,13 +5,21 @@ const path = require('path');
 const updaters = require('./updaters');
 const utils = require('./utils');
 
-module.exports = (answers, templates) => templates.forEach((template) => {
+let testMode = false;
+
+const construct = (answers, templates) => templates.map((template) => {
     const createFile = checkCreateFile(template, answers);
+    let file;
 
     if (createFile) {
-        create(template, answers);
+        file = create(template, answers);
     }
+
+    return file;
 });
+
+construct.setTestMode = (activate = false) =>
+    testMode = activate;
 
 const checkCreateFile = (template, answers) => {
     let create = true;
@@ -26,9 +34,15 @@ const checkCreateFile = (template, answers) => {
 const create = (template, answers) => {
     const destination = replace(template.destination, answers);
     let write = false;
+    const details = {
+        destination,
+        output: null
+    };
     let output;
 
-    ensureDirectories(destination);
+    if (!testMode) {
+        ensureDirectories(destination);
+    }
 
     if (!fs.existsSync(destination) || template.overwrite) {
         output = replace(template.template, answers, true);
@@ -39,8 +53,13 @@ const create = (template, answers) => {
     }
 
     if (write) {
-        fs.writeFileSync(destination, output, { encoding: 'utf8' });
+        if (!testMode) {
+            fs.writeFileSync(destination, output, { encoding: 'utf8' });
+        }
+        details.output = output;
     }
+
+    return details;
 };
 
 const update = (template, answers, destination) => {
@@ -113,3 +132,5 @@ const ensureDirectories = (filepath) => {
         return currentPath;
     }, rootDirectory);
 };
+
+module.exports = construct;
