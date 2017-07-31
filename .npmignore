@@ -1,4 +1,7 @@
+*.tgz
+.npmignore
 .nyc_output
 coverage
 examples
+package
 test
