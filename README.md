@@ -1,5 +1,7 @@
 [![Build Status](https://semaphoreci.com/api/v1/gonzofish/erector-set/branches/master/badge.svg)](https://semaphoreci.com/gonzofish/erector-set)
 
+[![codecov](https://codecov.io/gh/gonzofish/erector-set/branch/master/graph/badge.svg)](https://codecov.io/gh/gonzofish/erector-set)
+
 # erector-set
 A tool for creating project generators
 
